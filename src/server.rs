@@ -1,10 +1,14 @@
 
+#[cfg(feature = "ssr")]
 use std::{sync::{Arc, Mutex}, time::Instant};
 
-use leptos::{server, use_context, ServerFnError};
+#[cfg(feature = "ssr")]
+use leptos::use_context;
+use leptos::{server, ServerFnError};
 
-use crate::sensor::{get_barometric, get_humidity, get_temperature, model::{SensorData, SensorState}};
-
+#[cfg(feature = "ssr")]
+use crate::sensor::{get_barometric, get_humidity, get_temperature, model::SensorState};
+use crate::sensor::model::SensorData;
 
 
 #[server]
@@ -29,6 +33,7 @@ pub async fn get_cached_sensor_state() -> Result<SensorData, ServerFnError> {
 
 #[server]
 pub async fn get_sensor_state() -> Result<SensorData, ServerFnError> {
+    // use crate::sensor::{get_barometric, get_humidity, get_temperature};
 
     let temperature = get_temperature().await?;
     let humidity = get_humidity().await?;
@@ -42,6 +47,7 @@ pub async fn get_sensor_state() -> Result<SensorData, ServerFnError> {
     })
 }
 
+#[cfg(feature = "ssr")]
 pub async fn update_sensor_state(app_state: Arc<Mutex<SensorState>>) -> Result<(), ServerFnError> {
     let response = get_sensor_state().await?;
 

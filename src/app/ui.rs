@@ -96,11 +96,11 @@ fn Icon(sensor_type: SensorType) -> impl IntoView {
         <Image
             alt=filename
             src=filename
-            width=100
-            height=100
+            width=256
+            height=256
             quality=100
             blur=false
-            class="opacity-30 p-6"
+            class="opacity-30 p-6 w-32 h-32 md:w-48 md:h-48"
         />
     }
 }
