@@ -31,7 +31,7 @@
 use cfg_if as _;
 use console_error_panic_hook as _;
 use leptos as _;
-use leptos_image_optimizer as _;
+// use leptos_image_optimizer as _;
 use leptos_meta as _;
 use leptos_router as _;
 use mio as _;
@@ -40,7 +40,7 @@ use serde_json as _;
 use wasm_bindgen as _;
 use tracing as _;
 use derive_more as _;
-use leptos_chartistry as _;
+// use leptos_chartistry as _;
 use reqwest as _;
 
 #[cfg(feature = "ssr")]
@@ -50,11 +50,14 @@ async fn main() -> std::io::Result<()> {
 
     use actix_files::Files;
     use actix_web::{web, App, HttpServer};
+    use leptos::{config::get_configuration, prelude::{provide_context, AutoReload, GlobalAttributes, HydrationScripts}};
     // use actix_web::*;
     #[allow(clippy::wildcard_imports)]
     use leptos::*;
+    use leptos::prelude::ElementChild;
     use leptos_actix::{generate_route_list, LeptosRoutes};
-    use leptos_image_optimizer::{actix_handler, cache_app_images};
+    use leptos_meta::MetaTags;
+    // use leptos_image_optimizer::{actix_handler, cache_app_images};
     // use leptos_image_optimizer::*;
     use lillypad::{app::ui::App, server::get_sensor_state};
 
@@ -66,9 +69,10 @@ async fn main() -> std::io::Result<()> {
     let app_state = Arc::new(Mutex::new(SensorState::new(sensor_state)));
     setup_loop(app_state.clone());
     let shared_state = web::Data::new(app_state);
+    provide_context(shared_state.clone());
 
     #[allow(clippy::expect_used)]
-    let conf = get_configuration(None).await.expect("Failed to get configuration");
+    let conf = get_configuration(None).expect("Failed to get configuration");
     let addr = conf.leptos_options.site_addr;
     // Generate the list of routes in your Leptos App
     let routes = generate_route_list(App);
@@ -77,10 +81,10 @@ async fn main() -> std::io::Result<()> {
 
     // run cache app images only in server
 
-    #[allow(clippy::expect_used)]
-    cache_app_images(root, || view! { <App /> }, 2, || (), || ())
-        .await
-        .expect("Failed to cache images");
+    // #[allow(clippy::expect_used)]
+    // cache_app_images(root, || view! { <App /> }, 2, || (), || ())
+    //     .await
+    //     .expect("Failed to cache images");
 
     HttpServer::new(move || {
         let leptos_options = &conf.leptos_options;
@@ -90,12 +94,36 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(leptos_options.to_owned()))
             .route("/api/{tail:.*}", leptos_actix::handle_server_fns())
-            .service(Files::new("/assets", site_root))
-            .leptos_routes(leptos_options.to_owned(), routes.clone(), App)
+            // .service(Files::new("/assets", "."))
+            .service(actix_files::Files::new("/assets", &*root).show_files_listing())
+            .leptos_routes(routes.clone(), {
+                let leptos_options = leptos_options.clone();
+                move || {
+                    view! {
+                        <!DOCTYPE html> 
+                        <html lang="en">
+                            <head>
+                                <meta charset="utf-8" />
+                                <meta
+                                    name="viewport"
+                                    content="width=device-width, initial-scale=1"
+                                />
+                                <AutoReload options=leptos_options.clone() />
+                                <HydrationScripts options=leptos_options.clone() />
+                                <MetaTags />
+                            </head>
+                            <body>
+                                <App />
+                            </body>
+                        </html>
+                    }
+                }
+            })
             .service(Files::new("/pkg", format!("{site_root}/pkg")))
             .app_data(shared_state.clone())
+            .app_data(web::Data::new(leptos_options.to_owned()))
             // serve other assets from the `assets` directory
-            .route("/cache/image", web::get().to(actix_handler))
+            // .route("/cache/image", web::get().to(actix_handler))
             // serve JS/WASM/CSS from `pkg`
             // serve the favicon from /favicon.ico
             .service(favicon)
@@ -116,12 +144,11 @@ use lillypad::sensor::model::SensorState;
 
 #[cfg(feature = "ssr")]
 fn setup_loop(app_state: Arc<Mutex<SensorState>>) {
-    use actix_web::rt::time::interval;
-    use leptos::spawn_local;
+    use actix_web::rt::{spawn, time::interval};
     use lillypad::server::update_sensor_state;
     use std::time::Duration;
 
-    spawn_local(async move {
+    spawn(async move {
         let mut interval = interval(Duration::from_secs(5));
         loop {
             interval.tick().await;
@@ -135,8 +162,9 @@ fn setup_loop(app_state: Arc<Mutex<SensorState>>) {
 #[cfg(feature = "ssr")]
 #[actix_web::get("favicon.ico")]
 async fn favicon(
-    leptos_options: actix_web::web::Data<leptos::LeptosOptions>,
+    leptos_options: actix_web::web::Data<leptos::config::LeptosOptions>,
 ) -> actix_web::Result<actix_files::NamedFile> {
+
     let leptos_options = leptos_options.into_inner();
     let site_root = &leptos_options.site_root;
     Ok(actix_files::NamedFile::open(format!(
@@ -144,28 +172,10 @@ async fn favicon(
     ))?)
 }
 
-#[cfg(not(any(feature = "ssr", feature = "csr")))]
+#[cfg(not(feature = "ssr"))]
 pub fn main() {
     // no client-side main function
     // unless we want this to work with e.g., Trunk for pure client-side testing
     // see lib.rs for hydration function instead
     // see optional feature `csr` instead
-}
-
-#[cfg(all(not(feature = "ssr"), feature = "csr"))]
-pub fn main() {
-    // a client-side main function is required for using `trunk serve`
-    // prefer using `cargo leptos serve` instead
-    // to run: `trunk serve --open --features csr`
-    use leptos::*;
-    use lillypad::app::*;
-    use wasm_bindgen::prelude::wasm_bindgen;
-
-    console_error_panic_hook::set_once();
-
-    leptos::mount_to_body(move |cx| {
-        // note: for testing it may be preferrable to replace this with a
-        // more specific component, although leptos_router should still work
-        view! { cx, <App /> }
-    });
 }

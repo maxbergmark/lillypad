@@ -10,6 +10,7 @@ cfg_if! {
 if #[cfg(feature = "hydrate")] {
 
   use wasm_bindgen::prelude::wasm_bindgen;
+  use leptos::mount::hydrate_body;
 
     #[wasm_bindgen]
     pub fn hydrate() {
@@ -17,7 +18,7 @@ if #[cfg(feature = "hydrate")] {
 
       console_error_panic_hook::set_once();
 
-      leptos::mount_to_body(App);
+      hydrate_body(App);
     }
 }
 }

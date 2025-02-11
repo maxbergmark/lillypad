@@ -3,8 +3,8 @@
 use std::{sync::{Arc, Mutex}, time::Instant};
 
 #[cfg(feature = "ssr")]
-use leptos::use_context;
-use leptos::{server, ServerFnError};
+use leptos::prelude::use_context;
+use leptos::{prelude::ServerFnError, server};
 
 #[cfg(feature = "ssr")]
 use crate::sensor::{get_barometric, get_humidity, get_temperature, model::SensorState};
@@ -14,8 +14,7 @@ use crate::sensor::model::SensorData;
 #[server]
 #[allow(clippy::future_not_send)]
 pub async fn get_cached_sensor_state() -> Result<SensorData, ServerFnError> {
-    use actix_web::HttpRequest;
-    let app_state = use_context::<HttpRequest>()
+    let app_state = use_context::<leptos_actix::Request>()
         .and_then(|r| r.app_data::<actix_web::web::Data<Arc<Mutex<SensorState>>>>().cloned());
 
     if let Some(app_state) = app_state {
@@ -27,6 +26,7 @@ pub async fn get_cached_sensor_state() -> Result<SensorData, ServerFnError> {
             })
             .map_err(|e| ServerFnError::ServerError(e.to_string()))
     } else {
+        println!("fallback");
         get_sensor_state().await
     }
 }
@@ -50,6 +50,8 @@ pub async fn get_sensor_state() -> Result<SensorData, ServerFnError> {
 #[cfg(feature = "ssr")]
 pub async fn update_sensor_state(app_state: Arc<Mutex<SensorState>>) -> Result<(), ServerFnError> {
     let response = get_sensor_state().await?;
+    #[allow(clippy::use_debug)]
+    println!("updating sensor state: {response:?}");
 
     let mut value = app_state.lock()?;
     value.data = response.clone();

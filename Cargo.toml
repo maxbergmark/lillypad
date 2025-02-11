@@ -12,24 +12,27 @@ actix-web = { version = "4", optional = true, features = ["macros"] }
 console_error_panic_hook = "0.1"
 cfg-if = "1"
 http = { version = "0.2", optional = true }
-leptos = { version = "0.5", features = ["nightly"] }
-leptos_meta = { version = "0.5", features = ["nightly"] }
-leptos_actix = { version = "0.5", optional = true }
-leptos_router = { version = "0.5", features = ["nightly"] }
+leptos = { version = "0.7", features = ["nightly"] }
+# leptos_meta = { version = "0.7", features = ["nightly"] }
+leptos_meta = { version = "0.7" }
+leptos_actix = { version = "0.7", optional = true }
+leptos_router = { version = "0.7", features = ["nightly"] }
 wasm-bindgen = "=0.2.100"
 tracing = { version = "0.1.37", optional = true }
-leptos_image_optimizer = { git = "https://github.com/jinseok9338/leptos_image.git" }
+# leptos_image_optimizer = { git = "https://github.com/jinseok9338/leptos_image.git" }
+# leptos_image = "0.2.0"
 reqwest = { version = "0.12.12", features = ["json"] }
 serde = "1.0.217"
 serde_json = "1.0.138"
 mio = "=0.8.7"
-leptos-chartistry = "0.2.1"
+# leptos-chartistry = "0.1.7"
 derive_more = { version = "2.0.1", features = ["from"] }
 
 [features]
 default = ["hydrate", "ssr"]
-csr = ["leptos/csr", "leptos_meta/csr", "leptos_router/csr"]
-hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
+# csr = ["leptos/csr", "leptos_meta/csr", "leptos_router/csr"]
+# hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
+hydrate = ["leptos/hydrate"]
 ssr = [
   "dep:actix-files",
   "dep:actix-web",
@@ -38,7 +41,8 @@ ssr = [
   "leptos_meta/ssr",
   "leptos_router/ssr",
   "dep:tracing",
-  "leptos_image_optimizer/ssr",
+  # "leptos_image_optimizer/ssr",
+  # "leptos_image/ssr",
 ]
 
 # Defines a size-optimized profile for the WASM bundle in release mode

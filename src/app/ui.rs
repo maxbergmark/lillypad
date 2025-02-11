@@ -1,8 +1,11 @@
 #[allow(clippy::wildcard_imports)]
-use leptos::*;
-use leptos_image_optimizer::{provide_image_context, Image};
+use leptos::prelude::*;
+// use leptos_image_optimizer::{provide_image_context, Image};
 use leptos_meta::{provide_meta_context, Stylesheet, Title};
-use leptos_router::{Route, Router, Routes};
+use leptos_router::{
+    components::{Route, Router, Routes},
+    StaticSegment,
+};
 
 use crate::{
     app::provide_state,
@@ -12,17 +15,17 @@ use crate::{
 #[component]
 pub fn App() -> impl IntoView {
     provide_meta_context();
-    provide_image_context();
+    // provide_image_context();
     provide_state();
 
     view! {
         <Stylesheet id="leptos" href="/pkg/leptos_start.css" />
         <Title text="Lilly's Environment" />
-        <Router fallback=|| { view! { <NotFound /> }.into_view() }>
+        <Router>
             <main>
-                <Routes>
+                <Routes fallback=|| { view! { <NotFound /> }.into_view() }>
                     <Route
-                        path="/"
+                        path=StaticSegment("/")
                         view=|| {
                             view! { <DataChart /> }
                         }
@@ -68,7 +71,7 @@ fn DataBox(sensor_type: SensorType) -> impl IntoView {
 #[component]
 fn DataValue(sensor_type: SensorType) -> impl IntoView {
     #[allow(clippy::expect_used)]
-    let s = use_context::<Resource<i32, Result<SensorData, leptos::ServerFnError>>>()
+    let s = use_context::<Resource<Result<SensorData, ServerFnError>>>()
         .expect("No server state found");
     let value = move || {
         s.get()
@@ -76,9 +79,7 @@ fn DataValue(sensor_type: SensorType) -> impl IntoView {
             .map_or_else(|| " ".to_string(), |s| sensor_type.format_data(&s))
     };
     view! {
-        <Transition fallback=|| {
-            view! {}
-        }>
+        <Transition fallback=|| {}>
             <span class="text-white font-mono m-auto text-4xl md:text-8xl">{value}</span>
         </Transition>
     }
@@ -87,20 +88,27 @@ fn DataValue(sensor_type: SensorType) -> impl IntoView {
 #[component]
 fn Icon(sensor_type: SensorType) -> impl IntoView {
     let filename = match sensor_type {
-        SensorType::Temperature => "temperature.png",
-        SensorType::Humidity => "humidity.png",
-        SensorType::Barometric => "pressure.png",
+        SensorType::Temperature => "/assets/temperature.png",
+        SensorType::Humidity => "/assets/humidity.png",
+        SensorType::Barometric => "/assets/pressure.png",
     };
 
     view! {
-        <Image
-            alt=filename
+        <img
             src=filename
+            alt=filename
             width=256
             height=256
-            quality=100
-            blur=false
             class="opacity-30 p-6 w-32 h-32 md:w-48 md:h-48"
         />
     }
+    // <Image
+    //     alt=filename
+    //     src=filename
+    //     width=256
+    //     height=256
+    //     quality=100
+    //     blur=false
+    //     class="opacity-30 p-6 w-32 h-32 md:w-48 md:h-48"
+    // />
 }

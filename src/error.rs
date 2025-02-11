@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use derive_more::From;
-use leptos::ServerFnError;
+use leptos::prelude::ServerFnError;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
