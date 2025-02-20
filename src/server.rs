@@ -10,8 +10,8 @@ use leptos::{prelude::ServerFnError, server};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "ssr")]
-use crate::sensor::{get_barometric, get_humidity, get_temperature, model::SensorState};
-use crate::sensor::model::SensorData;
+use crate::sensor::{get_barometric, get_humidity, get_temperature};
+use crate::sensor::model::{SensorData, SensorState};
 
 #[cfg(feature = "ssr")]
 mod util;
@@ -57,6 +57,7 @@ pub async fn get_cached_historical_data(time_span: TimeSpan) -> Result<SensorSta
     )
 }
 
+#[cfg(feature = "ssr")]
 fn f(value: &SensorState, time_span: TimeSpan) -> SensorState {
     let historical_data = util::filter_data(&value.historical_data, time_span);
     SensorState {
