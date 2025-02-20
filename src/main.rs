@@ -28,6 +28,8 @@
     while_true,
 )]
 
+#![recursion_limit = "256"]
+
 use cfg_if as _;
 use console_error_panic_hook as _;
 use leptos as _;
@@ -40,8 +42,10 @@ use serde_json as _;
 use wasm_bindgen as _;
 use tracing as _;
 use derive_more as _;
-// use leptos_chartistry as _;
+use leptos_chartistry as _;
+use leptos_use as _;
 use reqwest as _;
+use chrono as _;
 
 #[cfg(feature = "ssr")]
 #[actix_web::main]
@@ -49,7 +53,7 @@ async fn main() -> std::io::Result<()> {
     use std::sync::Arc;
 
     use actix_files::Files;
-    use actix_web::{web, App, HttpServer};
+    use actix_web::{middleware::Logger, web, App, HttpServer};
     use leptos::{config::get_configuration, prelude::{provide_context, AutoReload, GlobalAttributes, HydrationScripts}};
     // use actix_web::*;
     #[allow(clippy::wildcard_imports)]
@@ -78,13 +82,7 @@ async fn main() -> std::io::Result<()> {
     let routes = generate_route_list(App);
     println!("listening on http://{}", &addr);
     let root = conf.leptos_options.site_root.clone();
-
-    // run cache app images only in server
-
-    // #[allow(clippy::expect_used)]
-    // cache_app_images(root, || view! { <App /> }, 2, || (), || ())
-    //     .await
-    //     .expect("Failed to cache images");
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     HttpServer::new(move || {
         let leptos_options = &conf.leptos_options;
@@ -127,6 +125,7 @@ async fn main() -> std::io::Result<()> {
             // serve JS/WASM/CSS from `pkg`
             // serve the favicon from /favicon.ico
             .service(favicon)
+            .wrap(Logger::default())
 
         //.wrap(middleware::Compress::default())
     })

@@ -1,4 +1,4 @@
-use std::{fmt::Display, time::Instant};
+use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct SensorState {
     pub data: SensorData,
     pub historical_data: Vec<SensorData>,
-    pub time_data: Vec<i32>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -14,6 +13,7 @@ pub struct SensorData {
     pub temperature: f32,
     pub humidity: f32,
     pub barometric: f32,
+    pub time: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,7 +36,6 @@ impl SensorState {
         Self {
             data: state.clone(),
             historical_data: vec![state],
-            time_data: vec![Instant::now().elapsed().as_secs() as i32],
         }
     }
 }
